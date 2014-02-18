@@ -1,0 +1,19 @@
+<canvas id="canvas" width="640" height="480"></canvas><br>
+X Size:<input type="TEXT" id="x" value="80"> Y Size:<input type="TEXT" id="y" value="40">
+Divine Num: <input type="TEXT" id="room" value="3">
+<input type="BUTTON" value="draw" onclick="start();">
+<script src="./main.js"></script>
+<script type="text/javascript">
+	var canvas = document.getElementById("canvas");
+	var context = canvas.getContext("2d");
+
+	start();
+
+	function start() {
+		var x = document.getElementById("x").value;
+		var y = document.getElementById("y").value;
+		var room = document.getElementById("room").value;
+		var d = new Dungeon(x, y,room);
+		d.draw(context);
+	}
+</script>
