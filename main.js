@@ -12,12 +12,12 @@
 			this.field[i] = temp;
 		}
 
-		var areas = [[{"x":0,"y":0}, {"x":x-1,"y":y-1}]];
+		var areas = [{leftUp:{"x":0,"y":0}, rightDown:{"x":x-1,"y":y-1}}];
 		if (this.x > Dungeon.AT_LEAST_SIZE*2 && this.y > Dungeon.AT_LEAST_SIZE*2) {
 			while (this.room < this.maxRoom) {
 				areas = shuffle(areas);
 				var area = areas.pop();
-				var divined = divineField(area[0], area[1], this.field);
+				var divined = divineField(area.leftUp, area.rightDown, this.field);
 				if (divined) areas = areas.concat(divined);
 				this.room++;
 			}
@@ -25,7 +25,7 @@
 
 		var rooms = [];
 		for (i = 0; i < areas.length; i++) {
-			rooms.push(createRoom(areas[i][0], areas[i][1], this.field));
+			rooms.push(createRoom(areas[i].leftUp, areas[i].rightDown, this.field));
 		}
 		for (i = 0; i < rooms.length; i++) {
 			createWay(rooms[i].leftUp, rooms[i].rightDown, this.field);
@@ -104,7 +104,7 @@
 	}
 
 	function divineField(leftUp, rightDown, field) {
-		var divinedField = [[{}, {}], [{}, {}]];
+		var divinedField = [{"leftUp":{}, "rightDown":{}}, {"leftUp":{}, "rightDown":{}}];
 		if ((Math.abs(leftUp.x - rightDown.x) < Dungeon.AT_LEAST_SIZE*2  &&
 					Math.abs(leftUp.y - rightDown.y) < Dungeon.AT_LEAST_SIZE*2)) {
 			return;
@@ -131,25 +131,25 @@
 	}
 
 	function divX(leftUp, rightDown, field) {
-		var divinedField = [[{}, {}], [{}, {}]];
+		var divinedField = [{"leftUp":{}, "rightDown":{}}, {"leftUp":{}, "rightDown":{}}];
 		var distance = (rightDown.x - Dungeon.AT_LEAST_SIZE) - (leftUp.x + Dungeon.AT_LEAST_SIZE);
 		var x = Math.floor(distance / 2) + (leftUp.x + Dungeon.AT_LEAST_SIZE);
 		for (var i = leftUp.y; i <= rightDown.y; i++) {
 			field[i][x] = Dungeon.BORDER;
 		}
-		divinedField[0][0] = {
+		divinedField[0].leftUp = {
 			"x": leftUp.x,
 			"y": leftUp.y
 		};
-		divinedField[0][1] = {
+		divinedField[0].rightDown = {
 			"x": x-1,
 			"y": rightDown.y
 		};
-		divinedField[1][0] = {
+		divinedField[1].leftUp = {
 			"x": x+1,
 			"y": leftUp.y
 		};
-		divinedField[1][1] = {
+		divinedField[1].rightDown = {
 			"x": rightDown.x,
 			"y": rightDown.y
 		};
@@ -158,25 +158,25 @@
 	}
 
 	function divY(leftUp, rightDown, field) {
-		var divinedField = [[{}, {}], [{}, {}]];
+		var divinedField = [{"leftUp":{}, "rightDown":{}}, {"leftUp":{}, "rightDown":{}}];
 		var distance = (rightDown.y - Dungeon.AT_LEAST_SIZE) - (leftUp.y + Dungeon.AT_LEAST_SIZE);
 		var y = Math.floor(distance / 2) + (leftUp.y + Dungeon.AT_LEAST_SIZE);
 		for (var i = leftUp.x; i <= rightDown.x; i++) {
 			field[y][i] = Dungeon.BORDER;
 		}
-		divinedField[0][0] = {
+		divinedField[0].leftUp = {
 			"x": leftUp.x,
 			"y": leftUp.y
 		};
-		divinedField[0][1] = {
+		divinedField[0].rightDown = {
 			"x": rightDown.x,
 			"y": y-1
 		};
-		divinedField[1][0] = {
+		divinedField[1].leftUp = {
 			"x": leftUp.x,
 			"y": y+1
 		};
-		divinedField[1][1] = {
+		divinedField[1].rightDown = {
 			"x": rightDown.x,
 			"y": rightDown.y
 		};
