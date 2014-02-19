@@ -24,10 +24,10 @@
 		}
 
 		var rooms = [];
-		for (var i = 0; i < areas.length; i++) {
+		for (i = 0; i < areas.length; i++) {
 			rooms.push(createRoom(areas[i][0], areas[i][1], this.field));
 		}
-		for (var i = 0; i < rooms.length; i++) {
+		for (i = 0; i < rooms.length; i++) {
 			createWay(rooms[i].leftUp, rooms[i].rightDown, this.field);
 		}
 
@@ -36,32 +36,54 @@
 		}
 
 		cleanUp(this.field);
+
+		var points = setStartAndGoal(rooms, this.field);
+		this.start = points.start;
+		this.goal = points.goal;
 	}
 
-	function draw(context) {
+	function getStartPoint() {
+		return this.start;
+	}
+
+	function getGoalPoint() {
+		return this.goal;
+	}
+
+	function draw(context, debug) {
 		var width = context.canvas.width / this.x;
 		var height = context.canvas.height / this.y;
 
 		context.clearRect(0, 0, context.canvas.width, context.canvas.height);
 		for (var i = 0; i < this.y; i++) {
 			for (var j = 0; j < this.x; j++) {
-				switch(this.field[i][j]) {
-					case Dungeon.BORDER:
-						context.fillStyle = "red";
-						context.fillRect(j * width, i * height, width, height);
-						break;
-					case Dungeon.NONE:
-						context.fillStyle = "black";
-						context.strokeRect(j * width, i * height, width, height);
-						break;
-					case Dungeon.WALL:
-						context.fillStyle = "black";
-						context.fillRect(j * width, i * height, width, height);
-						break;
-					default:
-						context.fillStyle = "blue";
-						context.fillRect(j * width, i * height, width, height);
-						break;
+				if (this.start.x === j && this.start.y === i && debug) {
+					context.fillStyle = "red";
+					context.fillRect(j * width, i * height, width, height);
+				}
+				else if (this.goal.x === j && this.goal.y === i && debug) {
+					context.fillStyle = "blue";
+					context.fillRect(j * width, i * height, width, height);
+				}
+				else {
+					switch(this.field[i][j]) {
+						case Dungeon.BORDER:
+							context.fillStyle = "red";
+							context.fillRect(j * width, i * height, width, height);
+							break;
+						case Dungeon.NONE:
+							context.fillStyle = "black";
+							context.strokeRect(j * width, i * height, width, height);
+							break;
+						case Dungeon.WALL:
+							context.fillStyle = "black";
+							context.fillRect(j * width, i * height, width, height);
+							break;
+						default:
+							context.fillStyle = "blue";
+							context.fillRect(j * width, i * height, width, height);
+							break;
+					}
 				}
 			}
 		}
@@ -89,7 +111,7 @@
 		}
 		else if (Math.abs(leftUp.x - rightDown.x) >= Dungeon.AT_LEAST_SIZE*2 &&
 				Math.abs(leftUp.y - rightDown.y) >= Dungeon.AT_LEAST_SIZE*2) {
-			if (Math.floor(Math.random()*100)%2 == 0) {
+			if (Math.floor(Math.random()*100)%2 === 0) {
 				//x divine
 				divinedField = divX(leftUp, rightDown, field);
 			}
@@ -173,32 +195,33 @@
 				"y": 0
 			}
 		};
+		var distance;
 
 		if (rightDown.x - leftUp.x <= Dungeon.AT_LEAST_SIZE) {
-			room.leftUp.x = leftUp.x + 1;
-			room.rightDown.x = rightDown.x - 1;
+			room.leftUp.x = leftUp.x + Dungeon.MARGIN;
+			room.rightDown.x = rightDown.x - Dungeon.MARGIN;
 		}
 		else {
-			var distance = rightDown.x - leftUp.x - 1;
+			distance = rightDown.x - leftUp.x - Dungeon.MARGIN;
 			var x = [];
 			do {
-				x[0] = Math.floor(Math.random() * distance) + leftUp.x + 1;
-				x[1] = Math.floor(Math.random() * distance) + leftUp.x + 1;
+				x[0] = Math.floor(Math.random() * distance) + leftUp.x + Dungeon.MARGIN;
+				x[1] = Math.floor(Math.random() * distance) + leftUp.x + Dungeon.MARGIN;
 			} while(Math.abs(x[0] - x[1]) < Dungeon.ROOM_SIZE);
 			room.leftUp.x = Math.min(x[0], x[1]);
 			room.rightDown.x = Math.max(x[0], x[1]);
 		}
 
 		if (rightDown.y - leftUp.y <= Dungeon.AT_LEAST_SIZE) {
-			room.leftUp.y = leftUp.y + 1;
-			room.rightDown.y = rightDown.y - 1;
+			room.leftUp.y = leftUp.y + Dungeon.MARGIN;
+			room.rightDown.y = rightDown.y - Dungeon.MARGIN;
 		}
 		else {
-			var distance = rightDown.y - leftUp.y - 1;
+			distance = rightDown.y - leftUp.y - Dungeon.MARGIN * 2;
 			var y = [];
 			do {
-				y[0] = Math.floor(Math.random() * distance) + leftUp.y + 1;
-				y[1] = Math.floor(Math.random() * distance) + leftUp.y + 1;
+				y[0] = Math.floor(Math.random() * distance) + leftUp.y + Dungeon.MARGIN;
+				y[1] = Math.floor(Math.random() * distance) + leftUp.y + Dungeon.MARGIN;
 			} while(Math.abs(y[0] - y[1]) < Dungeon.ROOM_SIZE);
 			room.leftUp.y = Math.min(y[0], y[1]);
 			room.rightDown.y = Math.max(y[0], y[1]);
@@ -214,41 +237,43 @@
 	}
 
 	function createWay(leftUp, rightDown, field) {
-		for (var i = leftUp.x; i >= 0; i--) {
+		var i, j, x, y, distance;
+
+		for (i = leftUp.x; i >= 0; i--) {
 			if (field[leftUp.y][i] == Dungeon.BORDER) {
-				var distance = rightDown.y - leftUp.y;
-				var y = Math.floor(Math.random() * distance) + leftUp.y;
-				for (var j = leftUp.x; j > i; j--) {
+				distance = rightDown.y - leftUp.y;
+				y = Math.floor(Math.random() * distance) + leftUp.y;
+				for (j = leftUp.x; j > i; j--) {
 					field[y][j] = Dungeon.NONE;
 				}
 				break;
 			}
 		}
-		for (var i = rightDown.x; i < field[0].length; i++) {
+		for (i = rightDown.x; i < field[0].length; i++) {
 			if (field[rightDown.y][i] == Dungeon.BORDER) {
-				var distance = rightDown.y - leftUp.y;
-				var y = Math.floor(Math.random() * distance) + leftUp.y;
-				for (var j = rightDown.x; j < i; j++) {
+				distance = rightDown.y - leftUp.y;
+				y = Math.floor(Math.random() * distance) + leftUp.y;
+				for (j = rightDown.x; j < i; j++) {
 					field[y][j] = Dungeon.NONE;
 				}
 				break;
 			}
 		}
-		for (var i = leftUp.y; i >= 0; i--) {
+		for (i = leftUp.y; i >= 0; i--) {
 			if (field[i][leftUp.x] == Dungeon.BORDER) {
-				var distance = rightDown.x - leftUp.x;
-				var x = Math.floor(Math.random() * distance) + leftUp.x;
-				for (var j = leftUp.y; j > i; j--) {
+				distance = rightDown.x - leftUp.x;
+				x = Math.floor(Math.random() * distance) + leftUp.x;
+				for (j = leftUp.y; j > i; j--) {
 					field[j][x] = Dungeon.NONE;
 				}
 				break;
 			}
 		}
-		for (var i = rightDown.y; i < field.length; i++) {
+		for (i = rightDown.y; i < field.length; i++) {
 			if (field[i][rightDown.x] == Dungeon.BORDER) {
-				var distance = rightDown.x - leftUp.x;
-				var x = Math.floor(Math.random() * distance) + leftUp.x;
-				for (var j = rightDown.y; j < i; j++) {
+				distance = rightDown.x - leftUp.x;
+				x = Math.floor(Math.random() * distance) + leftUp.x;
+				for (j = rightDown.y; j < i; j++) {
 					field[j][x] = Dungeon.NONE;
 				}
 				break;
@@ -257,12 +282,13 @@
 	}
 
 	function joinWay(field) {
-		for (var i = 1; i < field[0].length-1; i++) {
+		var i;
+		for (i = 1; i < field[0].length-1; i++) {
 			if (field[0][i] === Dungeon.BORDER) {
 				checkPortraitOnBorder({"x": i, "y": 0}, field, true);
 			}
 		}
-		for (var i = 1; i < field.length-1; i++) {
+		for (i = 1; i < field.length-1; i++) {
 			if (field[i][0] === Dungeon.BORDER) {
 				checkHorizontalOnBorder({"x": 0, "y": i}, field, true);
 			}
@@ -271,18 +297,18 @@
 
 	function checkPortraitOnBorder(start, field, goDown) {
 		var buffer = null;
+		var i, j, k, left, right;
 		if (goDown) {
-			for (var j = start.y; j < field.length; j++) {
+			for (j = start.y; j < field.length; j++) {
 				if (field[j][start.x] == Dungeon.WALL) {
 					break;
 				}
 
-				var left = field[j][start.x - 1];
-				var right = field[j][start.x + 1];
-				//field[j][start.x] = Dungeon.WALL;
+				left = field[j][start.x - 1];
+				right = field[j][start.x + 1];
 				if (left === Dungeon.NONE || right === Dungeon.NONE) {
 					if (buffer) {
-						for (var k = buffer.y; k <= j; k++) {
+						for (k = buffer.y; k <= j; k++) {
 							field[k][start.x] = Dungeon.NONE;
 						}
 					}
@@ -297,17 +323,16 @@
 			}
 		}
 		else {
-			for (var j = start.y; j >= 0; j--) {
+			for (j = start.y; j >= 0; j--) {
 				if (field[j][start.x] == Dungeon.WALL) {
 					break;
 				}
 
-				var left = field[j][start.x - 1];
-				var right = field[j][start.x + 1];
-				//field[j][start.x] = Dungeon.WALL;
+				left = field[j][start.x - 1];
+				right = field[j][start.x + 1];
 				if (left === Dungeon.NONE || right === Dungeon.NONE) {
 					if (buffer) {
-						for (var k = buffer.y; k >= j; k--) {
+						for (k = buffer.y; k >= j; k--) {
 							field[k][start.x] = Dungeon.NONE;
 						}
 					}
@@ -329,18 +354,18 @@
 
 	function checkHorizontalOnBorder(start, field, goRight) {
 		var buffer = null;
+		var i, j, k, up, down;
 		if (goRight) {
-			for (var j = start.x; j < field[0].length; j++) {
+			for (j = start.x; j < field[0].length; j++) {
 				if (field[start.y][j] == Dungeon.WALL) {
 					break;
 				}
 
-				var up = field[start.y - 1][j];
-				var down = field[start.y + 1][j];
-				//field[start.y][j] = Dungeon.WALL;
+				up = field[start.y - 1][j];
+				down = field[start.y + 1][j];
 				if (up === Dungeon.NONE || down === Dungeon.NONE) {
 					if (buffer) {
-						for (var k = buffer.x; k <= j; k++) {
+						for (k = buffer.x; k <= j; k++) {
 							field[start.y][k] = Dungeon.NONE;
 						}
 					}
@@ -355,17 +380,16 @@
 			}
 		}
 		else {
-			for (var j = start.x; j >= 0; j--) {
+			for (j = start.x; j >= 0; j--) {
 				if (field[start.y][j] == Dungeon.WALL) {
 					break;
 				}
 
-				var up = field[start.y - 1][j];
-				var down = field[start.y + 1][j];
-				//field[start.y][j] = Dungeon.WALL;
+				up = field[start.y - 1][j];
+				down = field[start.y + 1][j];
 				if (up === Dungeon.NONE || down === Dungeon.NONE) {
 					if (buffer) {
-						for (var k = buffer.x; k >= j; k--) {
+						for (k = buffer.x; k >= j; k--) {
 							field[start.y][k] = Dungeon.NONE;
 						}
 					}
@@ -395,14 +419,47 @@
 		}
 	}
 
+	function setStartAndGoal(rooms, field) {
+		var roomNum = rooms.length;
+
+		var distance;
+		var startRoom = Math.floor(Math.random() * roomNum);
+		var goalRoom = Math.floor(Math.random() * roomNum);
+
+		distance = {
+			"x": rooms[startRoom].rightDown.x - rooms[startRoom].leftUp.x,
+			"y": rooms[startRoom].rightDown.y - rooms[startRoom].leftUp.y
+		};
+		var start = {
+			"x": Math.floor(Math.random() * distance.x) + rooms[startRoom].leftUp.x,
+			"y": Math.floor(Math.random() * distance.y) + rooms[startRoom].leftUp.y
+		};
+		distance = {
+			"x": rooms[goalRoom].rightDown.x - rooms[goalRoom].leftUp.x,
+			"y": rooms[goalRoom].rightDown.y - rooms[goalRoom].leftUp.y
+		};
+		var goal = {
+			"x": Math.floor(Math.random() * distance.x) + rooms[goalRoom].leftUp.x,
+			"y": Math.floor(Math.random() * distance.y) + rooms[goalRoom].leftUp.y
+		};
+
+		return {
+			"start": start,
+			"goal": goal
+		};
+	}
+
 	Dungeon.BORDER = -1;
 	Dungeon.NONE   =  0;
 	Dungeon.WALL   =  1;
 
 	Dungeon.ROOM_SIZE = 6;
-	Dungeon.AT_LEAST_SIZE = Dungeon.ROOM_SIZE + 2;
+	Dungeon.MARGIN = 1;
+	Dungeon.AT_LEAST_SIZE = Dungeon.ROOM_SIZE + (Dungeon.MARGIN * 2);
 
 	Dungeon.prototype.draw = draw;
+	Dungeon.prototype.getStartPoint = getStartPoint;
+	Dungeon.prototype.getGoalPoint = getGoalPoint;
 
 	global.Dungeon = Dungeon;
 })(this.self || global);
