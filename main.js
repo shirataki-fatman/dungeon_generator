@@ -50,38 +50,26 @@
 		return this.goal;
 	}
 
-	function draw(context, debug) {
+	function draw(onClear, onDraw) {
 		var width = context.canvas.width / this.x;
 		var height = context.canvas.height / this.y;
 
-		context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+		onClear();
 		for (var i = 0; i < this.y; i++) {
 			for (var j = 0; j < this.x; j++) {
-				if (this.start.x === j && this.start.y === i && debug) {
-					context.fillStyle = "red";
-					context.fillRect(j * width, i * height, width, height);
+				if (this.start.x === j && this.start.y === i) {
+					onDraw("start");
 				}
-				else if (this.goal.x === j && this.goal.y === i && debug) {
-					context.fillStyle = "blue";
-					context.fillRect(j * width, i * height, width, height);
+				else if (this.goal.x === j && this.goal.y === i) {
+					onDraw("goal");
 				}
 				else {
 					switch(this.field[i][j]) {
-						case Dungeon.BORDER:
-							context.fillStyle = "red";
-							context.fillRect(j * width, i * height, width, height);
-							break;
 						case Dungeon.NONE:
-							context.fillStyle = "black";
-							context.strokeRect(j * width, i * height, width, height);
+							onDraw("none");
 							break;
 						case Dungeon.WALL:
-							context.fillStyle = "black";
-							context.fillRect(j * width, i * height, width, height);
-							break;
-						default:
-							context.fillStyle = "blue";
-							context.fillRect(j * width, i * height, width, height);
+							onDraw("wall");
 							break;
 					}
 				}
